@@ -88,7 +88,7 @@ const capitalLetters = computed(() => {
  * 数字键盘按键配置
  * @type {Array} 包含数字键、小数点和删除键
  */
-const keyboard = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "0", ".", "del"];
+const keyboard = ["1", "2", "3", "4", "5", "6", "7", "8", "9", ".", "0", "del"];
 
 /**
  * 处理数字键盘点击事件
@@ -244,7 +244,11 @@ onLoad(() => {
     /* 保存按钮样式 */
     .save-btn {
       width: 80%;
-      background: linear-gradient(90deg, #66c2a5 0%, #4caf87 100%); /* 绿色渐变背景 */
+      background: linear-gradient(
+        90deg,
+        #66c2a5 0%,
+        #4caf87 100%
+      ); /* 绿色渐变背景 */
       color: white;
       text-align: center;
       border-radius: 999rpx; /* 圆角按钮 */

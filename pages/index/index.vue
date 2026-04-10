@@ -8,6 +8,20 @@
         <uni-icons type="wallet" size="24" color="#4CAF87"></uni-icons>
         <text class="amount-value">¥{{ formatAmount(totalAmount) }}</text>
       </view>
+      <view class="amount-details">
+        <view class="detail-row">
+          <text class="detail-label">总支出</text>
+          <text class="detail-value"
+            >¥{{ formatAmount(getTotalExpense()) }}</text
+          >
+        </view>
+        <view class="detail-row">
+          <text class="detail-label">剩余金额</text>
+          <text class="detail-value"
+            >¥{{ formatAmount(getRemainingAmount()) }}</text
+          >
+        </view>
+      </view>
     </view>
 
     <view class="card card--paper">
@@ -204,6 +218,18 @@ function formatAmount(value) {
     : String(fixed);
 }
 
+// 计算总支出数
+function getTotalExpense() {
+  return records.value.reduce((sum, record) => sum + Number(record.amount), 0);
+}
+
+// 计算剩余金额
+function getRemainingAmount() {
+  const totalNum = Number(totalAmount.value);
+  const expenseNum = getTotalExpense();
+  return totalNum - expenseNum;
+}
+
 // 重置“添加支出”表单（默认日期为今天）
 function resetAddForm() {
   const now = new Date();
@@ -378,6 +404,34 @@ onLoad(() => {
   color: #1d1d1f;
   text-align: right;
   letter-spacing: 1rpx;
+}
+
+.amount-details {
+  margin-top: 24rpx;
+  padding-top: 24rpx;
+  border-top: 2rpx solid rgba(76, 175, 135, 0.16);
+}
+
+.detail-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 12rpx;
+}
+
+.detail-row:first-child {
+  margin-top: 0;
+}
+
+.detail-label {
+  font-size: 26rpx;
+  color: rgba(56, 142, 107, 0.88);
+}
+
+.detail-value {
+  font-size: 28rpx;
+  font-weight: 600;
+  color: #1d1d1f;
 }
 
 .table-head {
