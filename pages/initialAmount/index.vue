@@ -147,7 +147,6 @@ const handleSave = () => {
  */
 onLoad(() => {
   const storedTotal = uni.getStorageSync("sbk_total_amount");
-  const storedRecords = uni.getStorageSync("sbk_records");
   // 如果已有初始金额记录，直接跳转到首页
   if (storedTotal !== undefined && storedTotal !== null && storedTotal !== "") {
     uni.reLaunch({
@@ -172,6 +171,7 @@ onLoad(() => {
     font-weight: bold;
     letter-spacing: 2rpx;
     padding: 40rpx 26rpx;
+    margin-top: 40rpx;
   }
 
   /* 金额输入区域样式 */
@@ -208,7 +208,7 @@ onLoad(() => {
     display: block;
     font-size: 24rpx;
     color: rgba(29, 29, 31, 0.6);
-    padding: 0 16rpx;
+    padding: 0 26rpx;
   }
 
   /* 数字键盘容器样式 */

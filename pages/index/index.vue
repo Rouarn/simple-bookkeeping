@@ -329,9 +329,12 @@ onLoad(() => {
 });
 </script>
 
-<style>
+<style lang="scss" scoped>
 .container {
-  padding: 52rpx 44rpx 96rpx;
+  padding: 96rpx 44rpx 96rpx;
+  /* #ifdef H5 */
+  padding-top: 52rpx;
+  /* #endif */
 }
 
 .page-title {
@@ -339,6 +342,7 @@ onLoad(() => {
   font-weight: 700;
   color: #1d1d1f;
   letter-spacing: 1rpx;
+  display: block;
 }
 
 .card {
