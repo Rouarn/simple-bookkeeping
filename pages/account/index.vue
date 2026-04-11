@@ -23,7 +23,7 @@
         </view>
       </view>
 
-      <view class="add-account">
+      <view class="add-account" @click="addAccount">
         <uni-icons type="plus" size="28" color="#4CAF87"></uni-icons>
         <text class="add-account-text">添加账户</text>
       </view>
@@ -48,6 +48,16 @@ onLoad(() => {
 function navigateBack() {
   uni.navigateBack({
     delta: 1,
+  });
+}
+
+// 添加账户
+function addAccount() {
+  // 这里可以添加添加账户的逻辑
+  // 例如：打开添加账户的弹窗或跳转到添加账户页面
+  uni.showToast({
+    title: "添加账户功能开发中",
+    icon: "none",
   });
 }
 </script>

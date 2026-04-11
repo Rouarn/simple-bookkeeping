@@ -54,6 +54,8 @@ export function selectJsonFile(successCallback, errorCallback) {
             // 使用URI读取文件内容
             readFileFromUri(uri, successCallback, errorCallback);
           }
+          // 恢复原始回调
+          main.onActivityResult = originalOnActivityResult;
         } else if (originalOnActivityResult) {
           // 如果不是当前请求，调用原始回调
           originalOnActivityResult(requestCode, resultCode, data);

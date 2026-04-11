@@ -34,7 +34,17 @@
           <uni-icons type="time" size="28" color="#4CAF87"></uni-icons>
           <text class="reminder-item-text">提醒时间</text>
         </view>
-        <text class="reminder-item-time">每天 20:00</text>
+
+        <picker
+          mode="time"
+          :value="datetimesingle"
+          @change="changeLog"
+          @cancel="cancelLog"
+        >
+          <view class="picker-view">
+            {{ datetimesingle }}
+          </view>
+        </picker>
       </view>
 
       <view class="reminder-item">
@@ -67,9 +77,23 @@ function navigateBack() {
 // 记账提醒状态
 const reminderEnabled = ref(1);
 
+// 提醒时间
+const datetimesingle = ref("20:00");
+
 // 处理开关变化
 function handleReminderChange(e) {
   reminderEnabled.value = e.currentIndex;
+}
+
+// 处理时间选择变化
+function changeLog(e) {
+  datetimesingle.value = e.detail.value;
+  console.log("选择的时间：", e.detail.value);
+}
+
+// 处理取消选择
+function cancelLog(e) {
+  console.log("取消选择");
 }
 </script>
 
@@ -132,7 +156,12 @@ function handleReminderChange(e) {
         }
       }
 
-      .reminder-item-time,
+      .picker-view {
+        font-size: 28rpx;
+        color: #888888;
+        padding: 10rpx 0;
+      }
+
       .reminder-item-mode {
         font-size: 28rpx;
         color: #888888;

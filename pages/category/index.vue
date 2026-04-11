@@ -10,8 +10,18 @@
 
     <view class="content">
       <view class="category-tab">
-        <view class="category-tab-item active">支出分类</view>
-        <view class="category-tab-item">收入分类</view>
+        <view
+          class="category-tab-item"
+          :class="{ active: activeTab === 0 }"
+          @click="switchTab(0)"
+          >支出分类
+        </view>
+        <view
+          class="category-tab-item"
+          :class="{ active: activeTab === 1 }"
+          @click="switchTab(1)"
+          >收入分类
+        </view>
       </view>
 
       <view class="category-list">
@@ -54,7 +64,7 @@
         </view>
       </view>
 
-      <view class="add-category">
+      <view class="add-category" @click="addCategory">
         <uni-icons type="plus" size="28" color="#4CAF87"></uni-icons>
         <text class="add-category-text">添加分类</text>
       </view>
@@ -63,7 +73,11 @@
 </template>
 
 <script setup>
+import { ref } from "vue";
 import { onLoad } from "@dcloudio/uni-app";
+
+// 当前激活的标签页，0表示支出分类，1表示收入分类
+const activeTab = ref(0);
 
 // 页面加载时的初始化
 onLoad(() => {
@@ -74,6 +88,21 @@ onLoad(() => {
 function navigateBack() {
   uni.navigateBack({
     delta: 1,
+  });
+}
+
+// 切换标签页
+function switchTab(index) {
+  activeTab.value = index;
+}
+
+// 添加分类
+function addCategory() {
+  // 这里可以添加添加分类的逻辑
+  // 例如：打开添加分类的弹窗或跳转到添加分类页面
+  uni.showToast({
+    title: "添加分类功能开发中",
+    icon: "none",
   });
 }
 </script>
