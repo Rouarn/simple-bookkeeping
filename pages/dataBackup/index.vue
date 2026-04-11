@@ -83,7 +83,7 @@ function exportJSON() {
     }),
   };
 
-  exportJsonFile(data, "bookkeeping_data");
+  exportJsonFile(data, "支出记录" + new Date().toLocaleString());
 }
 
 // 返回上一页

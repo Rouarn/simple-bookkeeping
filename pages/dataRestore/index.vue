@@ -30,9 +30,9 @@
           <uni-icons type="upload" size="24" color="#4CAF87"></uni-icons>
           选择JSON文件
         </button>
-        <text v-if="selectedFile" class="file-name">{{
-          selectedFile.name
-        }}</text>
+        <text v-if="selectedFile" class="file-name">
+          {{ selectedFile.name }}
+        </text>
       </view>
 
       <view v-if="fileData" class="data-preview">
@@ -78,91 +78,469 @@ function selectFile() {
   const systemInfo = uni.getSystemInfoSync();
   const platform = systemInfo.platform;
 
-  // App端使用plus.io.chooseFile
-  if (platform === "android" || platform === "ios") {
-    if (typeof plus !== "undefined" && plus.io && plus.io.chooseFile) {
-      plus.io.chooseFile({
-        filter: "all",
-        onsuccess: function (e) {
-          const filePath = e.files[0];
-          console.log("选中的JSON文件路径：", filePath);
+  // 只保留安卓平台功能
+  if (platform === "android") {
+    if (typeof plus !== "undefined") {
+      const main = plus.android.runtimeMainActivity();
+      const Intent = plus.android.importClass("android.content.Intent");
+      const Activity = plus.android.importClass("android.app.Activity");
+      const intent = new Intent(Intent.ACTION_GET_CONTENT);
+      intent.setType("application/json");
+      intent.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, false);
+      intent.addCategory(Intent.CATEGORY_OPENABLE);
+      main.startActivityForResult(intent, 200);
 
-          // 检查文件类型是否为JSON
-          if (!filePath.endsWith(".json")) {
-            uni.showToast({ title: "请选择.json文件", icon: "none" });
-            return;
+      // 获取回调
+      main.onActivityResult = (requestCode, resultCode, data) => {
+        if (resultCode == Activity.RESULT_OK) {
+          if (data.getData() != null) {
+            const uri = data.getData();
+            console.log("选择的文件URI：", uri);
+
+            // 直接使用URI读取文件，不获取真实路径
+            readFileFromUri(uri);
           }
-
-          selectedFile.value = {
-            name: filePath.split("/").pop(),
-            path: filePath,
-          };
-          parseJsonFile(filePath);
-        },
-        onerror: function (e) {
-          console.log("选择文件失败：", e);
-          uni.showToast({ title: "选择文件失败", icon: "none" });
-        },
-      });
+        }
+      };
     } else {
       uni.showToast({ title: "当前环境不支持文件选择", icon: "none" });
     }
-  }
-  // H5平台使用uni.chooseFile
-  else if (typeof uni.chooseFile === "function") {
-    uni.chooseFile({
-      count: 1,
-      accept: ".json",
-      success: function (res) {
-        selectedFile.value = res.tempFiles[0];
-        readFile(res.tempFiles[0].path);
-      },
-      fail: function (err) {
-        console.log("chooseFile失败:", err);
-        uni.showToast({
-          title: "选择文件失败",
-          icon: "none",
-        });
-      },
-    });
-  }
-  // 其他平台
-  else {
+  } else {
     uni.showToast({
-      title: "当前平台不支持文件选择",
+      title: "仅支持安卓平台",
       icon: "none",
     });
   }
 }
 
-// App端读取并解析JSON文件
+// 从URI读取文件
+function readFileFromUri(uri) {
+  console.log("从URI读取文件：", uri);
+  if (typeof plus !== "undefined" && plus.android) {
+    try {
+      const main = plus.android.runtimeMainActivity();
+      const contentResolver = main.getContentResolver();
+      plus.android.importClass(contentResolver);
+
+      // 获取文件名
+      let fileName = "backup.json";
+      try {
+        const Cursor = plus.android.importClass("android.database.Cursor");
+        const MediaStore = plus.android.importClass(
+          "android.provider.MediaStore",
+        );
+        const cursor = plus.android.invoke(
+          contentResolver,
+          "query",
+          uri,
+          null,
+          null,
+          null,
+          null,
+        );
+        if (cursor) {
+          try {
+            if (plus.android.invoke(cursor, "moveToFirst")) {
+              const columnIndex = plus.android.invoke(
+                cursor,
+                "getColumnIndexOrThrow",
+                MediaStore.MediaColumns.DISPLAY_NAME,
+              );
+              fileName = plus.android.invoke(cursor, "getString", columnIndex);
+              console.log("获取到的文件名：", fileName);
+            }
+          } finally {
+            plus.android.invoke(cursor, "close");
+          }
+        }
+      } catch (e) {
+        console.error("获取文件名失败：", e || "未知错误");
+      }
+
+      const BufferedReader = plus.android.importClass("java.io.BufferedReader");
+      const InputStreamReader = plus.android.importClass(
+        "java.io.InputStreamReader",
+      );
+
+      // 打开输入流
+      console.log("尝试打开输入流");
+      const inputStream = plus.android.invoke(
+        contentResolver,
+        "openInputStream",
+        uri,
+      );
+      console.log("输入流：", inputStream);
+
+      if (inputStream) {
+        console.log("输入流打开成功");
+        let reader = null;
+        try {
+          // 读取文件内容
+          reader = new BufferedReader(
+            new InputStreamReader(inputStream, "utf-8"),
+          );
+
+          let line;
+          let jsonStr = "";
+          while ((line = plus.android.invoke(reader, "readLine")) !== null) {
+            jsonStr += line;
+          }
+
+          console.log("文件读取完成：", jsonStr);
+          try {
+            const data = JSON.parse(jsonStr);
+            console.log("JSON解析成功：", data);
+            if (validateData(data)) {
+              console.log("数据验证成功，设置fileData");
+              fileData.value = data;
+              // 设置选中的文件信息
+              selectedFile.value = {
+                name: fileName,
+                path: "uri://selected",
+              };
+              uni.showToast({ title: "JSON解析成功", icon: "success" });
+            } else {
+              console.log("数据验证失败");
+              uni.showToast({ title: "文件格式不正确", icon: "none" });
+            }
+          } catch (err) {
+            console.error("JSON格式错误：", err || "未知错误");
+            uni.showToast({ title: "JSON格式无效", icon: "none" });
+          }
+        } finally {
+          // 关闭资源
+          if (reader) {
+            try {
+              plus.android.invoke(reader, "close");
+            } catch (e) {
+              console.error("关闭读取器失败：", e || "未知错误");
+            }
+          }
+          if (inputStream) {
+            try {
+              plus.android.invoke(inputStream, "close");
+            } catch (e) {
+              console.error("关闭输入流失败：", e || "未知错误");
+            }
+          }
+        }
+      } else {
+        console.error("无法打开文件输入流");
+        uni.showToast({ title: "无法读取文件", icon: "none" });
+      }
+    } catch (e) {
+      console.error("读取文件异常：", e || "未知错误");
+      uni.showToast({ title: "读取文件失败", icon: "none" });
+    }
+  }
+}
+
+// 根据URI获取真实文件路径
+function getRealPathFromURI(uri) {
+  const main = plus.android.runtimeMainActivity();
+  const ContentUris = plus.android.importClass("android.content.ContentUris");
+  const Uri = plus.android.importClass("android.net.Uri");
+  const Build = plus.android.importClass("android.os.Build");
+  const DocumentsContract = plus.android.importClass(
+    "android.provider.DocumentsContract",
+  );
+  const MediaStore = plus.android.importClass("android.provider.MediaStore");
+
+  const contentResolver = main.getContentResolver();
+  plus.android.importClass(contentResolver);
+
+  let path = null;
+
+  // 处理不同版本的Android
+  if (
+    Build.VERSION.SDK_INT >= 19 &&
+    DocumentsContract.isDocumentUri(main, uri)
+  ) {
+    // 处理DocumentUri
+    const docId = DocumentsContract.getDocumentId(uri);
+    if (
+      uri.toString().indexOf("com.android.providers.media.documents") !== -1
+    ) {
+      const id = docId.split(":")[1];
+      const selection = MediaStore.Files.FileColumns._ID + "=?";
+      path = getDataColumn(
+        main,
+        MediaStore.Files.getContentUri("external"),
+        selection,
+        [id],
+      );
+    } else if (
+      uri.toString().indexOf("com.android.providers.downloads.documents") !== -1
+    ) {
+      const contentUri = ContentUris.withAppendedId(
+        Uri.parse("content://downloads/public_downloads"),
+        parseInt(docId),
+      );
+      path = getDataColumn(main, contentUri, null, null);
+    }
+  } else if (uri.toString().indexOf("content://") !== -1) {
+    // 处理普通ContentUri
+    path = getDataColumn(main, uri, null, null);
+  } else if (uri.toString().indexOf("file://") !== -1) {
+    // 处理文件URI
+    path = uri.toString().replace("file://", "");
+  }
+
+  return path;
+}
+
+// 从ContentProvider获取数据列
+function getDataColumn(context, uri, selection, selectionArgs) {
+  const contentResolver = context.getContentResolver();
+  plus.android.importClass(contentResolver);
+  const cursor = contentResolver.query(
+    uri,
+    ["_data"],
+    selection,
+    selectionArgs,
+    null,
+  );
+
+  if (cursor != null) {
+    if (cursor.moveToFirst()) {
+      const columnIndex = cursor.getColumnIndexOrThrow("_data");
+      const path = cursor.getString(columnIndex);
+      cursor.close();
+      return path;
+    }
+    cursor.close();
+  }
+  return null;
+}
+
+// 读取并解析JSON文件
 function parseJsonFile(filePath) {
-  if (typeof plus !== "undefined" && plus.io) {
+  console.log("开始解析文件：", filePath);
+  if (typeof plus !== "undefined" && plus.android) {
+    console.log("使用Android ContentResolver API读取文件");
+    try {
+      const main = plus.android.runtimeMainActivity();
+      const contentResolver = main.getContentResolver();
+      plus.android.importClass(contentResolver);
+
+      const Uri = plus.android.importClass("android.net.Uri");
+      const BufferedReader = plus.android.importClass("java.io.BufferedReader");
+      const InputStreamReader = plus.android.importClass(
+        "java.io.InputStreamReader",
+      );
+
+      console.log("原始文件路径：", filePath);
+
+      // 确保路径以file://开头
+      let fileUri = filePath;
+      if (!filePath.startsWith("file://")) {
+        fileUri = "file://" + filePath;
+      }
+      console.log("处理后的文件URI：", fileUri);
+
+      // 创建Uri对象
+      const uri = Uri.parse(fileUri);
+      console.log("创建的Uri对象：", uri);
+
+      // 使用ContentResolver打开输入流
+      console.log("尝试打开输入流");
+      const inputStream = contentResolver.openInputStream(uri);
+      console.log("输入流：", inputStream);
+
+      if (inputStream) {
+        console.log("输入流打开成功");
+        try {
+          // 读取文件内容
+          const reader = new BufferedReader(
+            new InputStreamReader(inputStream, "utf-8"),
+          );
+
+          let line;
+          let jsonStr = "";
+          while ((line = reader.readLine()) !== null) {
+            jsonStr += line;
+          }
+
+          reader.close();
+          inputStream.close();
+
+          console.log("文件读取完成：", jsonStr);
+          try {
+            const data = JSON.parse(jsonStr);
+            console.log("JSON解析成功：", data);
+            if (validateData(data)) {
+              console.log("数据验证成功，设置fileData");
+              fileData.value = data;
+              uni.showToast({ title: "JSON解析成功", icon: "success" });
+            } else {
+              console.log("数据验证失败");
+              uni.showToast({ title: "文件格式不正确", icon: "none" });
+            }
+          } catch (err) {
+            console.error("JSON格式错误：", err || "未知错误");
+            uni.showToast({ title: "JSON格式无效", icon: "none" });
+          }
+        } finally {
+          if (inputStream) {
+            try {
+              inputStream.close();
+            } catch (e) {
+              console.error("关闭输入流失败：", e || "未知错误");
+            }
+          }
+        }
+      } else {
+        console.error("无法打开文件输入流");
+        uni.showToast({ title: "无法读取文件", icon: "none" });
+      }
+    } catch (e) {
+      console.error("读取文件异常：", e || "未知错误");
+      uni.showToast({ title: "读取文件失败", icon: "none" });
+    }
+  } else if (typeof plus !== "undefined" && plus.io) {
+    console.log("使用plus.io读取文件");
+    // 处理文件路径格式，确保以file://开头
+    let fileUrl = filePath;
+    if (!filePath.startsWith("file://")) {
+      fileUrl = "file://" + filePath;
+    }
+    console.log("处理后的文件路径：", fileUrl);
+    readFileFromPath(fileUrl);
+  } else {
+    console.error("当前环境不支持文件读取");
+    uni.showToast({ title: "当前环境不支持文件读取", icon: "none" });
+  }
+}
+
+// 从指定路径读取文件
+function readFileFromPath(filePath) {
+  console.log("从路径读取文件：", filePath);
+
+  // 对于Android 10+系统，使用ContentResolver API读取文件
+  if (typeof plus !== "undefined" && plus.android) {
+    console.log("使用ContentResolver API读取文件");
+    try {
+      const main = plus.android.runtimeMainActivity();
+      const contentResolver = main.getContentResolver();
+      plus.android.importClass(contentResolver);
+
+      // 从文件路径创建Uri
+      const Uri = plus.android.importClass("android.net.Uri");
+      console.log("原始文件路径：", filePath);
+
+      // 确保路径以file://开头
+      let fileUri = filePath;
+      if (!filePath.startsWith("file://")) {
+        fileUri = "file://" + filePath;
+      }
+      console.log("处理后的文件URI：", fileUri);
+
+      const uri = Uri.parse(fileUri);
+      console.log("创建的Uri对象：", uri);
+
+      // 打开输入流
+      const inputStream = contentResolver.openInputStream(uri);
+      console.log("输入流：", inputStream);
+
+      if (inputStream) {
+        console.log("输入流打开成功");
+        try {
+          plus.android.importClass(inputStream);
+          // 读取文件内容
+          const BufferedReader = plus.android.importClass(
+            "java.io.BufferedReader",
+          );
+          const InputStreamReader = plus.android.importClass(
+            "java.io.InputStreamReader",
+          );
+          const reader = new BufferedReader(
+            new InputStreamReader(inputStream, "utf-8"),
+          );
+
+          let line;
+          let jsonStr = "";
+          while ((line = reader.readLine()) !== null) {
+            jsonStr += line;
+          }
+
+          reader.close();
+          inputStream.close();
+
+          console.log("文件读取完成：", jsonStr);
+          try {
+            const data = JSON.parse(jsonStr);
+            console.log("JSON解析成功：", data);
+            if (validateData(data)) {
+              console.log("数据验证成功，设置fileData");
+              fileData.value = data;
+              uni.showToast({ title: "JSON解析成功", icon: "success" });
+            } else {
+              console.log("数据验证失败");
+              uni.showToast({ title: "文件格式不正确", icon: "none" });
+            }
+          } catch (err) {
+            console.error("JSON格式错误：", err || "未知错误");
+            uni.showToast({ title: "JSON格式无效", icon: "none" });
+          }
+        } finally {
+          if (inputStream) {
+            try {
+              inputStream.close();
+            } catch (e) {
+              console.error("关闭输入流失败：", e || "未知错误");
+            }
+          }
+        }
+      } else {
+        console.error("无法打开文件输入流");
+        uni.showToast({ title: "无法读取文件", icon: "none" });
+      }
+    } catch (e) {
+      console.error("读取文件异常：", e || "未知错误");
+      uni.showToast({ title: "读取文件失败", icon: "none" });
+    }
+  } else {
+    // 回退到原来的方式
+    console.log("使用plus.io读取文件");
     plus.io.resolveLocalFileSystemURL(
       filePath,
       entry => {
-        entry.file(file => {
-          const reader = new plus.io.FileReader();
-          reader.onloadend = evt => {
-            try {
-              const jsonStr = evt.target.result;
-              const data = JSON.parse(jsonStr);
-              if (validateData(data)) {
-                fileData.value = data;
-                uni.showToast({ title: "JSON解析成功", icon: "success" });
-              } else {
-                uni.showToast({ title: "文件格式不正确", icon: "none" });
+        console.log("文件系统解析成功：", entry);
+        entry.file(
+          file => {
+            console.log("获取文件对象成功：", file);
+            const reader = new plus.io.FileReader();
+            reader.onloadend = evt => {
+              console.log("文件读取完成：", evt.target.result);
+              try {
+                const jsonStr = evt.target.result;
+                const data = JSON.parse(jsonStr);
+                console.log("JSON解析成功：", data);
+                if (validateData(data)) {
+                  console.log("数据验证成功，设置fileData");
+                  fileData.value = data;
+                  uni.showToast({ title: "JSON解析成功", icon: "success" });
+                } else {
+                  console.log("数据验证失败");
+                  uni.showToast({ title: "文件格式不正确", icon: "none" });
+                }
+              } catch (err) {
+                console.error("JSON格式错误：", err);
+                uni.showToast({ title: "JSON格式无效", icon: "none" });
               }
-            } catch (err) {
-              console.error("JSON格式错误：", err);
-              uni.showToast({ title: "JSON格式无效", icon: "none" });
-            }
-          };
-          reader.onerror = () => {
-            uni.showToast({ title: "读取文件失败", icon: "none" });
-          };
-          reader.readAsText(file, "utf-8");
-        });
+            };
+            reader.onerror = () => {
+              console.error("文件读取失败");
+              uni.showToast({ title: "读取文件失败", icon: "none" });
+            };
+            console.log("开始读取文件内容");
+            reader.readAsText(file, "utf-8");
+          },
+          e => {
+            console.error("获取文件对象失败：", e);
+            uni.showToast({ title: "获取文件失败", icon: "none" });
+          },
+        );
       },
       e => {
         console.error("文件系统解析失败：", e);
@@ -172,42 +550,13 @@ function parseJsonFile(filePath) {
   }
 }
 
-// H5端读取文件内容
-function readFile(filePath) {
-  uni.readFile({
-    filePath: filePath,
-    success: function (res) {
-      try {
-        const data = JSON.parse(res.data);
-        if (validateData(data)) {
-          fileData.value = data;
-        } else {
-          uni.showToast({
-            title: "文件格式不正确",
-            icon: "none",
-          });
-        }
-      } catch (e) {
-        uni.showToast({
-          title: "文件解析失败",
-          icon: "none",
-        });
-      }
-    },
-    fail: function (err) {
-      uni.showToast({
-        title: "读取文件失败",
-        icon: "none",
-      });
-    },
-  });
-}
-
 // 验证数据格式
 function validateData(data) {
-  return (
-    data && typeof data.totalAmount === "string" && Array.isArray(data.records)
-  );
+  console.log("验证数据格式：", data);
+  const isValid =
+    data && typeof data.totalAmount === "string" && Array.isArray(data.records);
+  console.log("数据验证结果：", isValid);
+  return isValid;
 }
 
 // 恢复数据
