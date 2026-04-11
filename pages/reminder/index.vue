@@ -19,7 +19,7 @@
           <text class="reminder-item-text">记账提醒</text>
         </view>
         <uni-segmented-control
-          :current="reminderEnabled"
+          :current="reminderSettings.isNotificationEnabled ? 1 : 0"
           :values="['关', '开']"
           :active-color="'#4CAF87'"
           :in-active-color="'#f0f0f0'"
@@ -37,12 +37,12 @@
 
         <picker
           mode="time"
-          :value="datetimesingle"
+          :value="reminderSettings.reminderTime"
           @change="changeLog"
           @cancel="cancelLog"
         >
           <view class="picker-view">
-            {{ datetimesingle }}
+            {{ reminderSettings.reminderTime }}
           </view>
         </picker>
       </view>
@@ -62,9 +62,22 @@
 import { onLoad } from "@dcloudio/uni-app";
 import { ref } from "vue";
 
+// 提醒设置对象
+const reminderSettings = ref({
+  isNotificationEnabled: true,
+  reminderTime: "20:00",
+});
+
 // 页面加载时的初始化
 onLoad(() => {
-  // 可以在这里添加初始化逻辑
+  // 从本地存储读取设置
+  const settings = uni.getStorageSync("reminderSettings");
+  if (settings) {
+    reminderSettings.value = {
+      ...reminderSettings.value,
+      ...settings,
+    };
+  }
 });
 
 // 返回上一页
@@ -74,27 +87,23 @@ function navigateBack() {
   });
 }
 
-// 记账提醒状态
-const reminderEnabled = ref(1);
-
-// 提醒时间
-const datetimesingle = ref("20:00");
-
 // 处理开关变化
 function handleReminderChange(e) {
-  reminderEnabled.value = e.currentIndex;
+  reminderSettings.value.isNotificationEnabled = e.currentIndex === 1;
+  // 保存到本地存储
+  uni.setStorageSync("reminderSettings", reminderSettings.value);
 }
 
 // 处理时间选择变化
 function changeLog(e) {
-  datetimesingle.value = e.detail.value;
-  console.log("选择的时间：", e.detail.value);
+  reminderSettings.value.reminderTime = e.detail.value;
+
+  // 保存到本地存储
+  uni.setStorageSync("reminderSettings", reminderSettings.value);
 }
 
 // 处理取消选择
-function cancelLog(e) {
-  console.log("取消选择");
-}
+function cancelLog(_e) {}
 </script>
 
 <style lang="scss" scoped>

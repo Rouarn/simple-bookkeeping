@@ -16,7 +16,9 @@
             "autoclose" : true,
             "delay" : 0
         },
-        "modules" : {},
+        "modules" : {
+            "Push" : {}
+        },
         /* 模块配置 */
         "distribute" : {
             /* 应用发布信息 */
@@ -43,14 +45,35 @@
                     "<uses-permission android:name=\"android.permission.MANAGE_EXTERNAL_STORAGE\"/>",
                     "<uses-permission android:name=\"android.permission.READ_MEDIA_IMAGES\"/>",
                     "<uses-permission android:name=\"android.permission.READ_MEDIA_DOCUMENTS\"/>",
-                    "<uses-permission android:name=\"android.permission.READ_MEDIA_AUDIO\"/>"
+                    "<uses-permission android:name=\"android.permission.READ_MEDIA_AUDIO\"/>",
+                    "<uses-permission android:name=\"android.permission.RECEIVE_BOOT_COMPLETED\"/>",
+                    "<uses-permission android:name=\"android.permission.SCHEDULE_EXACT_ALARM\"/>",
+                    "<uses-permission android:name=\"android.permission.USE_EXACT_ALARM\"/>",
+                    "<uses-permission android:name=\"android.permission.POST_NOTIFICATIONS\"/>"
                 ]
             },
             "ios" : {
                 "dSYMs" : false
             },
             /* ios打包配置 */
-            "sdkConfigs" : {},
+            "sdkConfigs" : {
+                "push" : {
+                    "unipush" : {
+                        "version" : "2",
+                        "offline" : true,
+                        "icons" : {
+                            "small" : {
+                                "ldpi" : "C:/Users/29373/Downloads/小绿记账/01.png",
+                                "mdpi" : "C:/Users/29373/Downloads/小绿记账/02.png",
+                                "hdpi" : "C:/Users/29373/Downloads/小绿记账/03.png",
+                                "xhdpi" : "C:/Users/29373/Downloads/小绿记账/02.png",
+                                "xxhdpi" : "C:/Users/29373/Downloads/小绿记账/01.png"
+                            }
+                        },
+                        "mi" : {}
+                    }
+                }
+            },
             "icons" : {
                 "android" : {
                     "hdpi" : "unpackage/res/icons/72x72.png",
