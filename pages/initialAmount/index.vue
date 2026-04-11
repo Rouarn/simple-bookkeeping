@@ -145,13 +145,10 @@ const handleSave = () => {
  * 页面加载生命周期
  * @description 检查是否已设置初始金额，已设置则直接跳转到主页
  */
-onLoad(() => {
+onLoad(_options => {
   const storedTotal = uni.getStorageSync("sbk_total_amount");
-  // 如果已有初始金额记录，直接跳转到首页
-  if (storedTotal !== undefined && storedTotal !== null && storedTotal !== "") {
-    uni.reLaunch({
-      url: "/pages/index/index",
-    });
+  if (storedTotal) {
+    initialAmount.value = storedTotal;
   }
 });
 </script>
