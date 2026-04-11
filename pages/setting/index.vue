@@ -57,7 +57,7 @@
         <uni-icons type="right" size="24" color="#CCCCCC"></uni-icons>
       </view>
 
-      <view class="setting-item">
+      <view class="setting-item" @click="navigateToPage('dataRestore')">
         <view class="setting-item-left">
           <uni-icons
             type="cloud-download-filled"

@@ -27,6 +27,13 @@
         "navigationBarTitleText": "设置",
         "navigationStyle": "custom"
       }
+    },
+    {
+      "path": "pages/dataRestore/index",
+      "style": {
+        "navigationBarTitleText": "数据恢复",
+        "navigationStyle": "custom"
+      }
     }
   ],
   "globalStyle": {

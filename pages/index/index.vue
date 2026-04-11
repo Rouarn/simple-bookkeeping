@@ -334,7 +334,9 @@ function navigateToSetting() {
     display: flex;
     justify-content: space-between;
     align-items: center;
+    /* #ifdef MP-WEIXIN */
     margin-top: calc(var(--window-top) + var(--status-bar-height));
+    /* #endif */
 
     .page-title {
       font-size: 52rpx;

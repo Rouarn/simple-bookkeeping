@@ -35,15 +35,32 @@ export function exportJsonFile(data, filename = "export") {
   // #ifdef MP-WEIXIN
   try {
     const fs = wx.getFileSystemManager();
-    const filePath = `${wx.env.USER_DATA_PATH}/${filename}`;
+    const tempFilePath = `${wx.env.USER_DATA_PATH}/${filename}`;
 
-    fs.writeFileSync(filePath, jsonString, "utf8");
+    // 先写入临时文件
+    fs.writeFileSync(tempFilePath, jsonString, "utf8");
 
-    // 提示用户保存成功
-    wx.showToast({
-      title: `已保存至本地: ${filename}`,
-      icon: "success",
-      duration: 2000,
+    // 保存到本地存储（持久化）
+    wx.saveFile({
+      tempFilePath: tempFilePath,
+      success: function (res) {
+        const _savedFilePath = res.savedFilePath;
+        // 提示用户保存成功
+        wx.showToast({
+          title: `已保存至本地: ${filename}`,
+          icon: "success",
+          duration: 2000,
+        });
+      },
+      fail: function (e) {
+        console.error("保存文件失败:", e);
+        // 即使 saveFile 失败，也要提示用户文件已保存到临时目录
+        wx.showToast({
+          title: `已保存至临时目录: ${filename}`,
+          icon: "success",
+          duration: 2000,
+        });
+      },
     });
   } catch (e) {
     console.error("微信小程序导出失败:", e);
