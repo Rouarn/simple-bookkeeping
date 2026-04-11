@@ -83,7 +83,7 @@ function exportJSON() {
     }),
   };
 
-  exportJsonFile(data, "支出记录" + new Date().toLocaleString());
+  exportJsonFile(data, `支出记录-${new Date().getTime()}`);
 }
 
 // 返回上一页

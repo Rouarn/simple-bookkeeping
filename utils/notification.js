@@ -6,26 +6,25 @@
 export function initNotification() {
   console.log("初始化通知功能");
   const appAuthorizeSetting = uni.getAppAuthorizeSetting();
-  if (appAuthorizeSetting.notificationAlertAuthorized === "authorized") {
-    return;
+  if (appAuthorizeSetting.notificationAuthorized !== "authorized") {
+    setTimeout(() => {
+      uni.showModal({
+        title: "通知权限",
+        content: "请在设置中开启通知权限，以便接收记账提醒",
+        confirmText: "去设置",
+        cancelText: "取消",
+        success: function (res) {
+          if (res.confirm) {
+            uni.openAppAuthorizeSetting({
+              success: res => {
+                console.log("success", res);
+              },
+            });
+          }
+        },
+      });
+    }, 1000);
   }
-  setTimeout(() => {
-    uni.showModal({
-      title: "通知权限",
-      content: "请在设置中开启通知权限，以便接收记账提醒",
-      confirmText: "去设置",
-      cancelText: "取消",
-      success: function (res) {
-        if (res.confirm) {
-          uni.openAppAuthorizeSetting({
-            success: res => {
-              console.log("success", res);
-            },
-          });
-        }
-      },
-    });
-  }, 1000);
 }
 
 /**

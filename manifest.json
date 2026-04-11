@@ -60,17 +60,16 @@
                 "push" : {
                     "unipush" : {
                         "version" : "2",
-                        "offline" : true,
+                        "offline" : false,
                         "icons" : {
                             "small" : {
-                                "ldpi" : "C:/Users/29373/Downloads/小绿记账/01.png",
-                                "mdpi" : "C:/Users/29373/Downloads/小绿记账/02.png",
                                 "hdpi" : "C:/Users/29373/Downloads/小绿记账/03.png",
-                                "xhdpi" : "C:/Users/29373/Downloads/小绿记账/02.png",
-                                "xxhdpi" : "C:/Users/29373/Downloads/小绿记账/01.png"
+                                "ldpi" : "C:/Users/29373/Downloads/小绿记账/03.png",
+                                "mdpi" : "C:/Users/29373/Downloads/小绿记账/03.png",
+                                "xhdpi" : "C:/Users/29373/Downloads/小绿记账/03.png",
+                                "xxhdpi" : "C:/Users/29373/Downloads/小绿记账/03.png"
                             }
-                        },
-                        "mi" : {}
+                        }
                     }
                 }
             },
