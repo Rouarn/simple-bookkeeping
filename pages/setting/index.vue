@@ -17,7 +17,7 @@
         <uni-icons type="right" size="24" color="#CCCCCC"></uni-icons>
       </view>
 
-      <view class="setting-item">
+      <view class="setting-item" @click="navigateToPage('account')">
         <view class="setting-item-left">
           <uni-icons type="person-filled" size="28" color="#4CAF87"></uni-icons>
           <text class="setting-item-text">账户管理</text>
@@ -25,7 +25,7 @@
         <uni-icons type="right" size="24" color="#CCCCCC"></uni-icons>
       </view>
 
-      <view class="setting-item">
+      <view class="setting-item" @click="navigateToPage('reminder')">
         <view class="setting-item-left">
           <uni-icons
             type="notification-filled"
@@ -37,7 +37,7 @@
         <uni-icons type="right" size="24" color="#CCCCCC"></uni-icons>
       </view>
 
-      <view class="setting-item">
+      <view class="setting-item" @click="navigateToPage('category')">
         <view class="setting-item-left">
           <uni-icons type="list" size="28" color="#4CAF87"></uni-icons>
           <text class="setting-item-text">分类管理</text>

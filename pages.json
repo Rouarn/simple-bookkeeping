@@ -34,6 +34,27 @@
         "navigationBarTitleText": "数据恢复",
         "navigationStyle": "custom"
       }
+    },
+    {
+      "path": "pages/account/index",
+      "style": {
+        "navigationBarTitleText": "账户管理",
+        "navigationStyle": "custom"
+      }
+    },
+    {
+      "path": "pages/reminder/index",
+      "style": {
+        "navigationBarTitleText": "提醒设置",
+        "navigationStyle": "custom"
+      }
+    },
+    {
+      "path": "pages/category/index",
+      "style": {
+        "navigationBarTitleText": "分类管理",
+        "navigationStyle": "custom"
+      }
     }
   ],
   "globalStyle": {
