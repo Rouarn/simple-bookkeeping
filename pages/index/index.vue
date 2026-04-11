@@ -2,9 +2,9 @@
   <view class="container">
     <view class="header">
       <text class="page-title">支出记录</text>
-      <text class="setting" @click="navigateToSetting">
+      <view class="setting" @click="navigateToSetting">
         <uni-icons type="gear-filled" size="24" color="#4CAF87"></uni-icons>
-      </text>
+      </view>
     </view>
 
     <view class="card card--green">
@@ -334,6 +334,7 @@ function navigateToSetting() {
     display: flex;
     justify-content: space-between;
     align-items: center;
+    margin-top: calc(var(--window-top) + var(--status-bar-height));
 
     .page-title {
       font-size: 52rpx;

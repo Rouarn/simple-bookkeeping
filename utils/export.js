@@ -34,41 +34,20 @@ export function exportJsonFile(data, filename = "export") {
   // ====== 微信小程序 ======
   // #ifdef MP-WEIXIN
   try {
-    const fsm = wx.getFileSystemManager();
-    const tempFilePath = `${wx.env.USER_DATA_PATH}/${filename}`;
+    const fs = wx.getFileSystemManager();
+    const filePath = `${wx.env.USER_DATA_PATH}/${filename}`;
 
-    fsm.writeFile({
-      filePath: tempFilePath,
-      data: jsonString,
-      encoding: "utf8",
-      success: () => {
-        // 尝试保存到本地（用户可长期访问）
-        wx.saveFile({
-          tempFilePath: tempFilePath,
-          success: res => {
-            uni.showToast({ title: "已保存到手机", icon: "success" });
-          },
-          fail: () => {
-            // 如果 saveFile 失败（如空间不足），至少提示用户文件已写入临时目录
-            uni.showToast({ title: "已生成文件（未长期保存）", icon: "none" });
-            // 可选：打开文件预览（仅限可读格式）
-            wx.openDocument({
-              filePath: tempFilePath,
-              fileType: "txt", // json 会被当作文本
-              success: () => {},
-              fail: () => {},
-            });
-          },
-        });
-      },
-      fail: err => {
-        console.error("小程序写入失败:", err);
-        uni.showToast({ title: "导出失败", icon: "none" });
-      },
+    fs.writeFileSync(filePath, jsonString, "utf8");
+
+    // 提示用户保存成功
+    wx.showToast({
+      title: `已保存至本地: ${filename}`,
+      icon: "success",
+      duration: 2000,
     });
   } catch (e) {
-    console.error("小程序导出异常:", e);
-    uni.showToast({ title: "导出失败", icon: "none" });
+    console.error("微信小程序导出失败:", e);
+    wx.showToast({ title: "导出失败", icon: "none" });
   }
   // #endif
 
