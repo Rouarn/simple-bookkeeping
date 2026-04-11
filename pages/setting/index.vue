@@ -9,7 +9,7 @@
     </view>
 
     <view class="setting-list">
-      <view class="setting-item" @click="navigateToInitialAmount">
+      <view class="setting-item" @click="navigateToPage('initialAmount')">
         <view class="setting-item-left">
           <uni-icons type="wallet-filled" size="28" color="#4CAF87"></uni-icons>
           <text class="setting-item-text">修改初始总金额</text>
@@ -45,7 +45,7 @@
         <uni-icons type="right" size="24" color="#CCCCCC"></uni-icons>
       </view>
 
-      <view class="setting-item">
+      <view class="setting-item" @click="navigateToPage('dataBackup')">
         <view class="setting-item-left">
           <uni-icons
             type="cloud-upload-filled"
@@ -83,7 +83,6 @@
 import { onLoad } from "@dcloudio/uni-app";
 
 const systemInfo = uni.getSystemInfoSync();
-console.log("systemInfo: ", systemInfo);
 
 // 页面加载时的初始化
 onLoad(() => {
@@ -97,17 +96,16 @@ function navigateBack() {
   });
 }
 
-// 导航到修改初始总金额页面
-function navigateToInitialAmount() {
+// 导航到指定页面
+function navigateToPage(page) {
   uni.navigateTo({
-    url: "/pages/initialAmount/index",
+    url: "/pages/" + page + "/index",
   });
 }
 </script>
 
 <style lang="scss" scoped>
 .setting {
-  min-height: 100vh;
   padding-bottom: 80rpx;
 
   .header {

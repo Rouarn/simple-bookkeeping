@@ -51,13 +51,7 @@
       </view>
 
       <view v-else class="table">
-        <view
-          v-for="item in records"
-          :key="item.id"
-          class="tr"
-          @click="toggleSelected(item.id)"
-        >
-          <view class="check" :class="{ 'check--on': item.selected }"></view>
+        <view v-for="item in records" :key="item.id" class="tr">
           <text class="td td-date">{{ item.date }}</text>
           <text class="td td-item">{{ item.item }}</text>
           <text class="td td-amt">¥{{ formatAmount(item.amount) }}</text>
@@ -144,7 +138,7 @@ const totalAmount = ref("");
 
 // 支出记录列表
 // record 结构：
-// { id: string, date: string, item: string, amount: number, selected: boolean }
+// { id: string, date: string, item: string, amount: number }
 const records = ref([]);
 
 // 添加支出后的小叶子动画开关（通过先 false 再 nextTick->true 触发重播）
@@ -182,7 +176,6 @@ function guessDateFromTimeText(timeText, year) {
 function normalizeRecord(r) {
   if (!r || typeof r !== "object") return null;
   const amount = Number(r.amount);
-  const selected = Boolean(r.selected);
   const id = r.id
     ? String(r.id)
     : `${Date.now()}_${Math.random().toString(16).slice(2)}`;
@@ -193,7 +186,6 @@ function normalizeRecord(r) {
       date: String(r.date),
       item: String(r.item),
       amount: Number.isFinite(amount) ? amount : 0,
-      selected,
     };
   }
 
@@ -209,7 +201,6 @@ function normalizeRecord(r) {
     date,
     item,
     amount: Number.isFinite(amount) ? amount : 0,
-    selected,
   };
 }
 
@@ -292,7 +283,6 @@ function saveAdd() {
     date: addForm.value.dateText || formatDateText(addForm.value.dateRaw),
     item: itemText,
     amount: amountNumber,
-    selected: false,
   };
   records.value = [record, ...records.value];
   uni.setStorageSync("sbk_records", records.value);
@@ -302,14 +292,6 @@ function saveAdd() {
   nextTick(() => {
     leafAnimating.value = true;
   });
-}
-
-// 点击某条记录切换选中状态，并同步持久化
-function toggleSelected(id) {
-  records.value = records.value.map(r =>
-    r && r.id === id ? Object.assign({}, r, { selected: !r.selected }) : r,
-  );
-  uni.setStorageSync("sbk_records", records.value);
 }
 
 // 页面加载时：
@@ -501,26 +483,11 @@ function navigateToSetting() {
       display: flex;
       justify-content: flex-start;
       align-items: center;
-      gap: 14rpx;
       padding: 22rpx 18rpx;
       border-bottom: 2rpx solid rgba(56, 142, 107, 0.08);
 
       &:last-child {
         border-bottom: none;
-      }
-
-      .check {
-        width: 30rpx;
-        height: 30rpx;
-        border-radius: 10rpx;
-        background: rgba(56, 142, 107, 0.08);
-        box-shadow: inset 0 0 0 2rpx rgba(56, 142, 107, 0.18);
-        flex: none;
-
-        &--on {
-          background: rgba(76, 175, 135, 0.22);
-          box-shadow: inset 0 0 0 2rpx rgba(76, 175, 135, 0.4);
-        }
       }
 
       .td {

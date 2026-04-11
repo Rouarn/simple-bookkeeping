@@ -145,7 +145,7 @@ const handleSave = () => {
  * 页面加载生命周期
  * @description 检查是否已设置初始金额，已设置则直接跳转到主页
  */
-onLoad(_options => {
+onLoad(() => {
   const storedTotal = uni.getStorageSync("sbk_total_amount");
   if (storedTotal) {
     initialAmount.value = storedTotal;
