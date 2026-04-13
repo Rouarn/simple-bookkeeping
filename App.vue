@@ -8,15 +8,19 @@ import {
 export default {
   onLaunch: function () {
     console.log("App Launch");
+    // #ifdef APP-PLUS
     // 初始化通知功能
     initNotification();
     // 启动定时检查
     startReminderCheck(checkReminder);
+    // #endif
   },
   onShow: function () {
     console.log("App Show");
+    // #ifdef APP-PLUS
     // 每次应用显示时检查是否需要发送通知
     checkReminder();
+    // #endif
   },
   onHide: function () {
     console.log("App Hide");

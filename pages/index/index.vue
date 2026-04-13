@@ -126,7 +126,7 @@
 
 <script setup>
 import { ref, nextTick } from "vue";
-import { onLoad } from "@dcloudio/uni-app";
+import { onShow } from "@dcloudio/uni-app";
 
 // 页面：支出记录 + 初始金额设置
 // 数据持久化：
@@ -298,7 +298,7 @@ function saveAdd() {
 // - 读取初始金额与记录列表
 // - 兼容历史结构（normalizeRecord）
 // - 初始化添加表单
-onLoad(() => {
+onShow(() => {
   const storedTotal = uni.getStorageSync("sbk_total_amount");
   const storedRecords = uni.getStorageSync("sbk_records");
   if (storedTotal !== undefined && storedTotal !== null && storedTotal !== "") {
