@@ -8,7 +8,7 @@
       <view class="placeholder"></view>
     </view>
 
-    <view class="card card--paper">
+    <view class="card card--paper" id="records-card">
       <text class="card-title">支出记录</text>
       <view class="table-head">
         <text class="th th-date">日期</text>
@@ -47,13 +47,28 @@
     </view>
 
     <button
-      class="export-btn"
+      class="btn export-btn"
       hover-class="export-btn--active"
       @click="exportJSON"
     >
       <uni-icons type="download" size="24" color="#ffffff"></uni-icons>
       导出JSON文件
     </button>
+
+    <button
+      class="btn share-btn"
+      hover-class="share-btn--active"
+      @click="shareRecords"
+    >
+      <uni-icons type="undo" size="24" color="#ffffff"></uni-icons>
+      分享记录
+    </button>
+    <!-- 隐藏的 canvas，用于微信小程序生成图片 -->
+    <canvas
+      id="share-canvas"
+      type="2d"
+      style="position: absolute; left: -9999px; top: -9999px; width: 600px; height: 1000px;"
+    ></canvas>
   </view>
 </template>
 
@@ -61,6 +76,7 @@
 import { ref } from "vue";
 import { onLoad } from "@dcloudio/uni-app";
 import { exportJsonFile } from "@/utils/export.js";
+import { drawRecordsCardAndSave } from "@/utils/screenshot.js";
 
 // 支出记录列表
 const records = ref([]);
@@ -85,6 +101,14 @@ function exportJSON() {
 
   exportJsonFile(data, `支出记录-${new Date().getTime()}`);
 }
+
+// 分享记录
+function shareRecords() {
+  const filename = `支出记录-${new Date().getTime()}`;
+  drawRecordsCardAndSave(records.value, filename);
+}
+
+
 
 // 返回上一页
 function navigateBack() {
@@ -324,7 +348,7 @@ onLoad(() => {
     }
   }
 
-  .export-btn {
+  .btn {
     margin-top: 40rpx;
     width: 100%;
     height: 88rpx;
@@ -345,6 +369,14 @@ onLoad(() => {
     &--active {
       opacity: 0.88;
     }
+  }
+  
+  .export-btn {
+    cursor: pointer;
+  }
+
+  .share-btn {
+    margin-top: 20rpx;
   }
 }
 </style>
