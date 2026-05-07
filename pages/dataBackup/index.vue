@@ -8,7 +8,7 @@
       <view class="placeholder"></view>
     </view>
 
-    <view class="card card--paper" id="records-card">
+    <view class="card card--paper">
       <text class="card-title">支出记录</text>
       <view class="table-head">
         <text class="th th-date">日期</text>
@@ -105,7 +105,7 @@ function exportJSON() {
 // 分享记录
 function shareRecords() {
   const filename = `支出记录-${new Date().getTime()}`;
-  drawRecordsCardAndSave(records.value, filename);
+  drawRecordsCardAndSave(records.value, totalAmount.value, filename);
 }
 
 

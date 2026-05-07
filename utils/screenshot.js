@@ -1,9 +1,10 @@
 /**
  * 绘制支出记录卡片并保存为图片（支持 H5 / 微信小程序 / App）
  * @param {Array} records - 支出记录数组
+ * @param {string} totalAmount - 初始金额
  * @param {string} filename - 保存的文件名（不含扩展名）
  */
-export function drawRecordsCardAndSave(records, filename = "screenshot") {
+export function drawRecordsCardAndSave(records, totalAmount, filename = "screenshot") {
   // ====== H5 平台 ======
   // #ifdef H5
   try {
@@ -18,7 +19,7 @@ export function drawRecordsCardAndSave(records, filename = "screenshot") {
     const ctx = canvas.getContext("2d");
     ctx.scale(scale, scale);
     
-    drawRecordsCard(ctx, width, height, records);
+    drawRecordsCard(ctx, width, height, records, totalAmount);
     
     const dataUrl = canvas.toDataURL("image/png");
     saveImageH5(dataUrl, `${filename}.png`);
@@ -54,7 +55,7 @@ export function drawRecordsCardAndSave(records, filename = "screenshot") {
         canvas.height = height * dpr;
         ctx.scale(dpr, dpr);
         
-        drawRecordsCard(ctx, width, height, records);
+        drawRecordsCard(ctx, width, height, records, totalAmount);
         
         wx.canvasToTempFilePath({
           canvas: canvas,
@@ -91,7 +92,7 @@ export function drawRecordsCardAndSave(records, filename = "screenshot") {
     canvas.height = height;
     
     const ctx = canvas.getContext("2d");
-    drawRecordsCard(ctx, width, height, records);
+    drawRecordsCard(ctx, width, height, records, totalAmount);
     
     const dataUrl = canvas.toDataURL("image/png");
     saveImageAPP(dataUrl, `${filename}.png`);
@@ -113,16 +114,17 @@ function calculateCanvasHeight(records) {
   const tableHeaderHeight = 80;
   const rowHeight = 80;
   const emptyHeight = 200;
+  const footerHeight = 100;
   const padding = 40;
   
   if (records.length === 0) {
-    return headerHeight + emptyHeight + padding * 2;
+    return headerHeight + emptyHeight + footerHeight + padding * 2;
   }
-  return headerHeight + tableHeaderHeight + records.length * rowHeight + padding * 2;
+  return headerHeight + tableHeaderHeight + records.length * rowHeight + footerHeight + padding * 2;
 }
 
 // 绘制支出记录卡片
-function drawRecordsCard(ctx, width, height, records) {
+function drawRecordsCard(ctx, width, height, records, totalAmount) {
   const padding = 40;
   const contentWidth = width - padding * 2;
   
@@ -156,9 +158,12 @@ function drawRecordsCard(ctx, width, height, records) {
   ctx.textAlign = "right";
   ctx.fillText("金额", padding + contentWidth - 38, tableHeaderY + 22);
   
+  let footerY;
+  
   if (records.length === 0) {
     // 绘制空状态
     drawEmptyState(ctx, width, padding + 180);
+    footerY = padding + 180 + 200;
   } else {
     // 绘制记录
     let rowY = tableHeaderY + 78;
@@ -189,7 +194,29 @@ function drawRecordsCard(ctx, width, height, records) {
       
       rowY += 80;
     });
+    footerY = tableHeaderY + 78 + records.length * 80;
   }
+  
+  // 绘制底部信息（总金额和记录条数）
+  drawFooterInfo(ctx, width, footerY, totalAmount, records.length);
+}
+
+// 绘制底部信息
+function drawFooterInfo(ctx, width, startY, totalAmount, recordCount) {
+  const padding = 40;
+  const contentWidth = width - padding * 2;
+  const centerX = width / 2;
+  
+  // 绘制信息背景
+  const bgY = startY + 20;
+  drawRoundedRect(ctx, padding + 20, bgY, contentWidth - 40, 80, 44, "rgba(255, 255, 255, 0.86)");
+  
+  // 绘制文本
+  ctx.fillStyle = "rgba(56, 142, 107, 0.88)";
+  ctx.font = "26px sans-serif";
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.fillText(`包含初始金额 ¥${totalAmount || 0} 及支出记录 ${recordCount} 条`, centerX, bgY + 40);
 }
 
 // 绘制圆角矩形
