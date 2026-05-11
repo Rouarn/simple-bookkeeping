@@ -46,29 +46,18 @@
       </text>
     </view>
 
-    <button
-      class="btn export-btn"
-      hover-class="export-btn--active"
-      @click="exportJSON"
-    >
+    <button class="btn export-btn" hover-class="export-btn--active" @click="exportJSON">
       <uni-icons type="download" size="24" color="#ffffff"></uni-icons>
       导出JSON文件
     </button>
 
-    <button
-      class="btn share-btn"
-      hover-class="share-btn--active"
-      @click="shareRecords"
-    >
+    <button class="btn share-btn" hover-class="share-btn--active" @click="shareRecords">
       <uni-icons type="undo" size="24" color="#ffffff"></uni-icons>
       分享记录
     </button>
-    <!-- 隐藏的 canvas，用于微信小程序生成图片 -->
-    <canvas
-      id="share-canvas"
-      type="2d"
-      style="position: absolute; left: -9999px; top: -9999px; width: 600px; height: 1000px;"
-    ></canvas>
+    <!-- 隐藏的 canvas，用于生成图片 -->
+    <canvas id="share-canvas" canvas-id="share-canvas"
+      style="position: absolute; left: -9999px; top: -9999px; width: 600px; height: 5000px;"></canvas>
   </view>
 </template>
 
@@ -303,11 +292,9 @@ onLoad(() => {
           width: 46rpx;
           height: 60rpx;
           border-radius: 999rpx 999rpx 999rpx 0;
-          background: linear-gradient(
-            180deg,
-            rgba(102, 194, 165, 0.95) 0%,
-            rgba(76, 175, 135, 0.9) 100%
-          );
+          background: linear-gradient(180deg,
+              rgba(102, 194, 165, 0.95) 0%,
+              rgba(76, 175, 135, 0.9) 100%);
           opacity: 0.92;
 
           &.l1 {
@@ -370,7 +357,7 @@ onLoad(() => {
       opacity: 0.88;
     }
   }
-  
+
   .export-btn {
     cursor: pointer;
   }
