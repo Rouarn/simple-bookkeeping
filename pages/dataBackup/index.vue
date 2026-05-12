@@ -53,11 +53,44 @@
 
     <button class="btn share-btn" hover-class="share-btn--active" @click="shareRecords">
       <uni-icons type="undo" size="24" color="#ffffff"></uni-icons>
-      分享记录
+      分享记录图片
     </button>
+
+    <button class="btn qrcode-btn" hover-class="qrcode-btn--active" @click="shareQRCode">
+      <uni-icons type="scan" size="24" color="#ffffff"></uni-icons>
+      生成二维码
+    </button>
+
     <!-- 隐藏的 canvas，用于生成图片 -->
     <canvas id="share-canvas" canvas-id="share-canvas"
       style="position: absolute; left: -9999px; top: -9999px; width: 600px; height: 5000px;"></canvas>
+
+    <!-- 二维码弹窗 -->
+    <view class="modal" v-if="showQRModal" @click="closeQRModal">
+      <view class="modal-content" @click.stop>
+        <view class="modal-header">
+          <text class="modal-title">数据备份二维码</text>
+          <view class="modal-close" @click="closeQRModal">
+            <uni-icons type="close" size="28" color="#999999"></uni-icons>
+          </view>
+        </view>
+        <view class="modal-body">
+          <view class="qrcode-container">
+            <!-- 使用 uqrcode 组件直接显示二维码 -->
+            <uqrcode v-if="qrData" ref="qrcodeRef" :canvas-id="'qrcode-modal'" :value="qrData" :size="150"
+              :options="{ errorCorrectLevel: 3 }" @complete="onQRCodeComplete"></uqrcode>
+            <view v-else class="qrcode-loading">
+              <uni-icons type="loading" size="48" color="#4CAF87"></uni-icons>
+            </view>
+          </view>
+          <text class="qrcode-tip">扫码即可导入数据</text>
+        </view>
+        <view class="modal-footer">
+          <button class="btn btn-secondary" @click="closeQRModal">关闭</button>
+          <button class="btn btn-primary" @click="saveQRCode">保存图片</button>
+        </view>
+      </view>
+    </view>
   </view>
 </template>
 
@@ -72,6 +105,12 @@ const records = ref([]);
 
 // 初始金额
 const totalAmount = ref("");
+
+// 二维码弹窗
+const showQRModal = ref(false);
+const qrData = ref("");
+const qrcodeRef = ref(null);
+const qrCodeReady = ref(false);
 
 // 导出JSON文件
 function exportJSON() {
@@ -91,13 +130,88 @@ function exportJSON() {
   exportJsonFile(data, `支出记录-${new Date().getTime()}`);
 }
 
-// 分享记录
+// 分享记录图片
 function shareRecords() {
   const filename = `支出记录-${new Date().getTime()}`;
   drawRecordsCardAndSave(records.value, totalAmount.value, filename);
 }
 
+// 生成并显示二维码
+function shareQRCode() {
+  try {
+    showQRModal.value = true;
+    qrCodeReady.value = false;
 
+    // 准备备份数据
+    const backupData = {
+      totalAmount: totalAmount.value,
+      records: records.value,
+      exportDate: new Date().toLocaleString("zh-CN", {
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit",
+      }),
+    };
+
+    // 将数据转换为JSON字符串
+    const dataStr = JSON.stringify(backupData, null, 0);
+
+    // 检查数据大小（二维码容量限制）
+    const maxLength = 2953;
+    if (dataStr.length > maxLength) {
+      uni.showToast({ title: `数据过大，无法生成二维码`, icon: 'none' });
+      showQRModal.value = false;
+      return;
+    }
+
+    // 设置二维码数据
+    qrData.value = dataStr;
+
+  } catch (e) {
+    console.error('生成二维码失败:', e);
+    uni.showToast({ title: e.message || '生成二维码失败', icon: 'none' });
+    showQRModal.value = false;
+  }
+}
+
+// 二维码生成完成回调
+function onQRCodeComplete(res) {
+  console.log('二维码生成完成:', res);
+  if (res.success) {
+    qrCodeReady.value = true;
+  } else {
+    uni.showToast({ title: res.errMsg || '生成二维码失败', icon: 'none' });
+  }
+}
+
+// 关闭二维码弹窗
+function closeQRModal() {
+  showQRModal.value = false;
+  qrData.value = "";
+  qrCodeReady.value = false;
+}
+
+// 保存二维码图片
+function saveQRCode() {
+  if (!qrCodeReady.value || !qrcodeRef.value) {
+    uni.showToast({ title: '二维码未生成', icon: 'none' });
+    return;
+  }
+
+  // 调用组件的save方法保存图片
+  qrcodeRef.value.save({
+    success: () => {
+      uni.showToast({ title: '已保存到相册', icon: 'success' });
+    },
+    fail: (err) => {
+      console.error('保存失败:', err);
+      uni.showToast({ title: '保存失败', icon: 'none' });
+    }
+  });
+}
 
 // 返回上一页
 function navigateBack() {
@@ -364,6 +478,119 @@ onLoad(() => {
 
   .share-btn {
     margin-top: 20rpx;
+  }
+
+  .qrcode-btn {
+    margin-top: 20rpx;
+    background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+  }
+
+  /* 弹窗样式 */
+  .modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.4);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    backdrop-filter: blur(8rpx);
+
+    .modal-content {
+      width: 70%;
+      max-width: 520rpx;
+      background: #ffffff;
+      border-radius: 36rpx;
+      overflow: hidden;
+      box-shadow: 0 16rpx 64rpx rgba(0, 0, 0, 0.15);
+
+      .modal-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 28rpx 32rpx;
+        background: linear-gradient(135deg, #66c2a5 0%, #4caf87 100%);
+
+        .modal-title {
+          font-size: 32rpx;
+          font-weight: 600;
+          color: #ffffff;
+        }
+
+        .modal-close {
+          width: 52rpx;
+          height: 52rpx;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          border-radius: 50%;
+          background: rgba(255, 255, 255, 0.2);
+
+          .uni-icons {
+            color: #ffffff !important;
+          }
+        }
+      }
+
+      .modal-body {
+        padding: 32rpx;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+
+        .qrcode-container {
+          width: 280rpx;
+          height: 280rpx;
+          background: #ffffff;
+          border-radius: 20rpx;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          box-shadow: 0 4rpx 24rpx rgba(76, 175, 135, 0.15);
+          padding: 20rpx;
+          border: 4rpx solid #f5f5f5;
+
+          .qrcode-loading {
+            color: #4CAF87;
+          }
+        }
+
+        .qrcode-tip {
+          margin-top: 24rpx;
+          font-size: 24rpx;
+          color: #999999;
+          text-align: center;
+          line-height: 1.5;
+        }
+      }
+
+      .modal-footer {
+        display: flex;
+        gap: 24rpx;
+        padding: 24rpx 32rpx 32rpx;
+
+        .btn {
+          flex: 1;
+          margin-top: 0;
+          height: 80rpx;
+          line-height: 80rpx;
+          font-size: 28rpx;
+
+          &-secondary {
+            background: #f5f5f5;
+            color: #666666;
+          }
+
+          &-primary {
+            background: linear-gradient(90deg, #66c2a5 0%, #4caf87 100%);
+            color: #ffffff;
+          }
+        }
+      }
+    }
   }
 }
 </style>

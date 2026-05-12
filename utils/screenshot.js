@@ -41,36 +41,35 @@ export function drawRecordsCardAndSave(
     const width = 600;
     const height = calculateCanvasHeight(records);
 
-    const query = uni.createSelectorQuery();
-    query
-      .select("#share-canvas")
-      .fields({ node: true, size: true })
-      .exec(res => {
-        if (!res[0]) {
-          uni.hideLoading();
-          uni.showToast({ title: "未找到 canvas", icon: "none" });
-          return;
-        }
+    // 使用 uni.createCanvasContext 替代 SelectorQuery 获取 canvas
+    const ctx = uni.createCanvasContext("share-canvas");
 
-        const canvas = res[0].node;
-        const ctx = canvas.getContext("2d");
+    // 使用 uni-app API 绘制
+    drawRecordsCardUniApp(ctx, width, height, records, totalAmount);
 
-        const dpr = uni.getSystemInfoSync().pixelRatio;
-        canvas.width = width * dpr;
-        canvas.height = height * dpr;
-        ctx.scale(dpr, dpr);
-
-        drawRecordsCard(ctx, width, height, records, totalAmount);
-
-        wx.canvasToTempFilePath({
-          canvas: canvas,
+    ctx.draw(false, () => {
+      setTimeout(() => {
+        uni.canvasToTempFilePath({
+          canvasId: "share-canvas",
+          x: 0,
+          y: 0,
           width: width,
           height: height,
-          destWidth: width * 2,
-          destHeight: height * 2,
           success: res => {
-            uni.hideLoading();
-            saveImageMP(res.tempFilePath, `${filename}.png`);
+            // 使用 uni.saveFile 将临时文件持久化
+            uni.saveFile({
+              tempFilePath: res.tempFilePath,
+              success: saveRes => {
+                uni.hideLoading();
+                saveImageMP(saveRes.savedFilePath, `${filename}.png`);
+              },
+              fail: saveErr => {
+                console.error("持久化文件失败:", saveErr);
+                // 如果持久化失败，尝试直接保存到相册
+                uni.hideLoading();
+                saveImageMP(res.tempFilePath, `${filename}.png`);
+              },
+            });
           },
           fail: e => {
             console.error("转换失败:", e);
@@ -78,7 +77,8 @@ export function drawRecordsCardAndSave(
             uni.showToast({ title: "生成图片失败", icon: "none" });
           },
         });
-      });
+      }, 800);
+    });
   } catch (e) {
     console.error("微信小程序绘制失败:", e);
     uni.hideLoading();
